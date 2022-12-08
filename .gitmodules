@@ -1,0 +1,6 @@
+[submodule "Session4TableView"]
+	path = Session4TableView
+	url = https://github.com/aliakbr/Session4TableView.git
+[submodule "Session4DynamicTable"]
+	path = Session4DynamicTable
+	url = https://github.com/aliakbr/Session4DynamicTable.git
