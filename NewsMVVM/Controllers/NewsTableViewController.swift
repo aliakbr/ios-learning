@@ -6,40 +6,73 @@
 //
 
 import UIKit
+import RxSwift
 
 class NewsTableViewController: UITableViewController {
-
+    
+    private let disposeBag = DisposeBag()
+    private var articleListViewModel : ArticleListViewModel?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.navigationController?.navigationBar.prefersLargeTitles = true
 
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
 
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
+        populateNews()
+    }
+    
+    private func populateNews() {
+        let resource = Resource<ArticleRespose>(url: URL(string: "https://newsapi.org/v2/top-headlines?country=us&apiKey=bf31140fd4e345129855d66a7a521d53")!
+        )
+        
+        URLRequest.load(resource: resource).subscribe(onNext: { articleResponse in
+            let articles = articleResponse.articles
+            self.articleListViewModel = ArticleListViewModel(articles)
+            
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+            }
+        })
+        .disposed(by: disposeBag)
     }
 
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-        return 0
+        return 1
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
-        return 0
+        guard let articleListViewModel = articleListViewModel else {
+            return 0
+        }
+        
+        return articleListViewModel.articleViewModels.count
     }
 
-    /*
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "reuseIdentifier", for: indexPath)
-
-        // Configure the cell...
-
+        
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "ArticleTableViewCell", for: indexPath) as? ArticleTableViewCell else {
+            fatalError("ArticleTableViewCell not found")
+        }
+        
+        let cellData = self.articleListViewModel?.ArticleAt(indexPath.row)
+        
+        cellData?.title.asDriver(onErrorJustReturn: "no title found").drive(onNext: { titleText in
+            cell.titleLabel.text = titleText
+        }).disposed(by: disposeBag)
+        
+        cellData?.description.asDriver(onErrorJustReturn: "no description found").drive(onNext: { descriptionText in
+            cell.descriptionLabel.text = descriptionText
+        }).disposed(by: disposeBag)
+        
         return cell
     }
-    */
 
     /*
     // Override to support conditional editing of the table view.
